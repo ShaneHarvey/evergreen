@@ -476,6 +476,22 @@ func (as *APIServer) NextTask(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
+	if h.AgentStartTime.IsZero() {
+		if err := h.SetAgentStartTime(); err != nil {
+			grip.Warning(message.WrapError(err, message.Fields{
+				"message": "could not set host's agent start time for first contact",
+				"host":    h.Id,
+				"distro":  h.Distro.Id,
+			}))
+		} else {
+			grip.Info(message.Fields{
+				"message": "agent initiated first contact with server",
+				"host":    h.Id,
+				"distro":  h.Distro.Id,
+			})
+		}
+	}
+
 	// stopAgentMonitor is only used for debug log purposes.
 	var stopAgentMonitor bool
 	defer func() {
