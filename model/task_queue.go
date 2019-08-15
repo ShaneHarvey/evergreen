@@ -248,6 +248,17 @@ func BlockTaskGroupTasks(taskID string) error {
 }
 
 func (self *TaskQueue) Save() error {
+	// avoid saving empty queues, because the
+	// DistroQueueInfo.AliasQueue (and therefore the collection we
+	// save the queue to) isn't populated properly unless there
+	// are tasks in the queue.
+	if len(self.Queue) == 0 {
+		return nil
+	}
+	if len(self.Queue) > 10000 {
+		self.Queue = self.Queue[:10000]
+	}
+
 	return updateTaskQueue(self.Distro, self.Queue, self.DistroQueueInfo)
 }
 
